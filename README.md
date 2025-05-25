@@ -206,3 +206,54 @@
 </body>
 </html>
 # smart-resume-builder
+const express = require('express');
+const mysql = require('mysql2');
+const bodyParser = require('body-parser');
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Middleware
+app.use(bodyParser.json());
+app.use(express.static('public')); // Serve static files from public directory
+
+// MySQL connection
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root', // your mysql username
+    password: '', // your mysql password
+    database: 'resume_builder' // your mysql database name
+});
+
+db.connect(err => {
+    if(err) throw err;
+    console.log('Connected to MySQL');
+});
+
+// API route to save resume data
+app.post('/api/resume', (req, res) => {
+    const { name, email, phone, skills, experience } = req.body;
+
+    const sql = 'INSERT INTO resumes (name, email, phone, skills, experience) VALUES (?, ?, ?, ?, ?)';
+    db.query(sql, [name, email, phone, JSON.stringify(skills), JSON.stringify(experience)], (err, results) => {
+        if(err) {
+            res.status(500).json({ success: false, message: 'Error saving to database' });
+            return;
+        }
+        res.json({ success: true, resumeData: { name, email, phone, skills, experience }});
+    });
+});
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
+CREATE TABLE resumes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    skills TEXT NOT NULL,
+    experience TEXT NOT NULL
+);
+npm install -g firebase-tools
